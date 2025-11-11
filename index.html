@@ -1,29 +1,26 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Time Machine 69</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Time Machine 69</title>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
+  <h1 class="title">finally made mine first project for NASA in final year</h1>
 
-  <div class="watermark">finally made mine first project for NASA in final year</div>
+  <div class="box">
+    <div class="header">Time Machine 69</div>
 
-  <div class="wrap">
-    <h1>Time Machine 69</h1>
-
-    <div class="row">
-      <input id="year" type="number" value="2050" />
+    <div class="controls">
+      <input id="year" inputmode="numeric" autocomplete="off"
+             placeholder="enter future years only"/>
       <button id="go">Travel</button>
     </div>
 
-    <div class="screen" id="screen">
-      <span class="line muted">Ready. Enter a year and hit Travel.</span>
-      <span class="cursor"></span>
-    </div>
+    <div id="screen" aria-live="polite"></div>
   </div>
 
-<script src="app.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

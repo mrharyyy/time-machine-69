@@ -1,4 +1,3 @@
-/* -------------------- styles.css -------------------- */
 :root{
   --bg:#0b0d10; --card:#0f1217; --ink:#e7edf5; --muted:#9aa3ad; --accent:#73ffd2; --danger:#ff3b30;
   --blink-duration: 1400ms; /* total in→hold→out */

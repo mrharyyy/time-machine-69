@@ -1,61 +1,97 @@
-/* CONFIG: your message sequence before the final result */
-const sequence = [
-  "Missed Call Received from Narendra Modi…",
-  "Calling aliens… (2nd attempt)",
-  "Calling aliens… (3rd attempt)"
-];
-const finalLine = "2026 me toh duniya khatam hai 💀";
+/* -------------------- app.js -------------------- */
+'use strict';
+(function(){
+  // 🔧 Tweak these if you want slower/faster
+  const DUR_BLINK = 1400;     // ms for each transient line (must match CSS var --blink-duration)
+  const GAP_BETWEEN = 280;    // ms gap between lines
+  const FINAL_IN = 1200;      // ms for final fade-in (must match CSS var --final-in)
 
-const yearInput = document.getElementById("year");
-const goBtn = document.getElementById("go");
-const screen = document.getElementById("screen");
-const hint = document.getElementById("hint");
+  const screen = document.getElementById('screen');
+  const goBtn = document.getElementById('go');
+  const yearInput = document.getElementById('year');
+  const errorEl = document.getElementById('error');
 
-/* Ensure input starts blank (no default value) */
-yearInput.value = "";
-yearInput.placeholder = "enter future years only";
+  // Sequence lines (customize freely)
+  const lines = [
+    'calling modi ji…',
+    'calling aliens…',
+    'decoding future…',
+    'decrypting classified files…',
+    'syncing timelines…',
+    'projecting outcome…'
+  ];
 
-/* helpers */
-const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-
-function error(msg){
-  hint.textContent = msg;
-  screen.textContent = "";
-}
-
-function clearError(){
-  hint.textContent = "";
-}
-
-async function playSequence(){
-  screen.textContent = "";
-  for(const msg of sequence){
-    // show message with single blink (in → hold → out)
-    screen.className = "screen";     // reset
-    screen.textContent = msg;
-    screen.classList.add("blink-once","meta");
-    await sleep(1850);               // slightly more than animation length
-    screen.textContent = "";         // go to blank before next item
-    await sleep(200);                // tiny gap
+  // Validation: only years >= 2026 allowed
+  function validateYear(raw){
+    const y = parseInt(String(raw || '').trim(), 10);
+    if (Number.isNaN(y)) return { ok:false, msg:'Enter a valid 4‑digit year.' };
+    if (String(y).length !== 4) return { ok:false, msg:'Year must be 4 digits.' };
+    if (y <= 2025) return { ok:false, msg:'Only future years ≥ 2026 are allowed.' };
+    return { ok:true, year:y };
   }
 
-  // Final result: blink in once and stay, red & distinct
-  screen.className = "screen";
-  screen.textContent = finalLine;
-  screen.classList.add("blink-stick","result");
-}
-
-goBtn.addEventListener("click", async () => {
-  clearError();
-
-  const yr = Number(yearInput.value.trim());
-  if(!yr){
-    return error("Enter a year first.");
-  }
-  if(yr <= 2025){
-    return error("Future only. 2026 se aage daalo.");
+  function clearScreen(){
+    while (screen.firstChild) screen.removeChild(screen.firstChild);
   }
 
-  // valid → play the fun sequence
-  await playSequence();
-});
+  function showTransient(text){
+    return new Promise(resolve => {
+      const el = document.createElement('div');
+      el.className = 'line blink-once';
+      el.textContent = text;
+      screen.appendChild(el);
+      el.addEventListener('animationend', () => {
+        screen.removeChild(el); // remove after out
+        setTimeout(resolve, GAP_BETWEEN);
+      }, { once:true });
+    });
+  }
+
+  function showFinal(text){
+    const el = document.createElement('div');
+    el.className = 'final final-in';
+    el.textContent = text;
+    screen.appendChild(el);
+    return el;
+  }
+
+  async function runSequence(year){
+    clearScreen();
+    errorEl.textContent = '';
+    goBtn.disabled = true;
+    yearInput.disabled = true;
+
+    // Play lines strictly in order
+    for (const t of lines){
+      await showTransient(t);
+    }
+
+    // Final result (red) stays
+    showFinal('2026 me duniya khatam hai');
+
+    // Re-enable controls after a short pause
+    setTimeout(() => {
+      goBtn.disabled = false;
+      yearInput.disabled = false;
+    }, FINAL_IN + 300);
+  }
+
+  // No default value; keep blank on load
+  yearInput.value = '';
+
+  // Submit handler
+  function handleStart(){
+    const v = validateYear(yearInput.value);
+    if (!v.ok){
+      errorEl.textContent = v.msg;
+      clearScreen();
+      return;
+    }
+    runSequence(v.year);
+  }
+
+  goBtn.addEventListener('click', handleStart);
+  yearInput.addEventListener('keydown', (e)=>{
+    if (e.key === 'Enter') handleStart();
+  });
+})();

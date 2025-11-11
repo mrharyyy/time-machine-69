@@ -1,79 +1,79 @@
-(() => {
-  const screen = document.getElementById("screen");
-  const yearEl = document.getElementById("year");
-  const goBtn = document.getElementById("go");
+const screen = document.getElementById("screen");
+const goBtn = document.getElementById("go");
+const yearInput = document.getElementById("year");
 
-  // ✅ Added new "calling aliens" line (3rd message)
-  function buildMessages(y){
-    return [
-      "Booting temporal core…",
-      "Routing request to NASA Deep Space Network…",
-      "Trying to contact aliens on Channel 69… 👽",        // ✅ NEW LINE
-      "Secure link established.",
-      `Calibrating timeline: ${y}…`,
-      "Wormhole phase alignment 1/3…",
-      "Wormhole phase alignment 2/3…",
-      "Wormhole phase alignment 3/3… ✔",
-      "Missed Call Received from Narendra Modi…",
-      "Spacetime checksum failed. Searching nearest stable node…",
-      "Prediction window collapsed.",
-      "2026 me toh duniya khatam hai 💀|danger"
-    ];
-  }
+// Messages sequence (kept exactly like you asked, including aliens & the final line)
+function buildSequence(y) {
+  const yr = y?.trim();
+  const target = yr ? yr : "future";
+  return [
+    `Dialing ${target}...`,
+    `Missed call received from Narendra Modi...`,
+    `Calling aliens... (2nd attempt)`,
+    `Calling aliens... (3rd attempt)`,
+    `Establishing secure link to NASA...`,
+    `Decrypting future logs...`,
+    `2026 me toh duniya khatam hai 💀`
+  ];
+}
 
-  let typing = false, timer;
-  const cursor = document.querySelector(".cursor");
-
-  function typeSequence(lines){
-    if(typing) return;
-    typing = true;
+// Typewriter with controllable speed (slower & readable)
+function typeLine(text, { charSpeed = 60 } = {}) {
+  return new Promise(resolve => {
+    screen.innerHTML = `<span class="type fade-in"></span>`;
+    const el = screen.querySelector(".type");
     let i = 0;
+    const timer = setInterval(() => {
+      el.textContent = text.slice(0, i++);
+      if (i > text.length) {
+        clearInterval(timer);
+        resolve();
+      }
+    }, charSpeed);
+  });
+}
 
-    const setText = (text, cls) => {
-      screen.innerHTML = `<span class="line ${cls||""}">${text}</span>`;
-      screen.appendChild(cursor);
-    };
+// Blink the whole line a few times before switching to next
+function blinkLine() {
+  return new Promise(r => {
+    screen.classList.add("blink");
+    setTimeout(() => {
+      screen.classList.remove("blink");
+      r();
+    }, 260 * 5 + 60); // match CSS blink cycles
+  });
+}
 
-    const typeOne = (txt, cls, cb) => {
-      let pos = 0;
-      const step = () => {
-        setText(txt.slice(0, pos++), cls);
-        if(pos <= txt.length) timer = setTimeout(step, 22);
-        else cb && setTimeout(cb, 500);
-      };
-      step();
-    };
-
-    const erase = (cb) => {
-      let text = screen.querySelector(".line").textContent;
-      const cls = screen.querySelector(".line").className.replace("line","").trim();
-      const step = () => {
-        text = text.slice(0, -2);
-        setText(text, cls);
-        if(text.length > 0) timer = setTimeout(step, 12);
-        else cb && setTimeout(cb, 200);
-      };
-      step();
-    };
-
-    const next = () => {
-      if(i >= lines.length){ typing = false; return; }
-      const raw = lines[i++];
-      const [msg, flag] = raw.split("|");
-      const cls = flag === "danger" ? "danger" : "";
-      typeOne(msg, cls, () => {
-        if(flag === "danger"){ typing = false; return; }
-        erase(next);
-      });
-    };
-
-    next();
+async function runSequence() {
+  const val = yearInput.value;
+  if (!val) {
+    yearInput.classList.add("shake");
+    setTimeout(() => yearInput.classList.remove("shake"), 400);
+    // still run for fun even if blank
   }
 
-  goBtn.addEventListener("click", () => {
-    clearTimeout(timer);
-    typeSequence(buildMessages(String(yearEl.value || "2050")));
-  });
+  goBtn.disabled = true;
+  yearInput.disabled = true;
 
-  yearEl.addEventListener("keydown", e => { if(e.key === "Enter") goBtn.click(); });
-})();
+  const lines = buildSequence(val);
+
+  // pacing controls (tweak if you want slower/faster)
+  const charSpeed = 60;        // ms per character (higher = slower)
+  const holdAfterType = 650;   // pause after a line finishes
+
+  for (const line of lines) {
+    await typeLine(line, { charSpeed });
+    await new Promise(r => setTimeout(r, holdAfterType));
+    await blinkLine();
+  }
+
+  goBtn.disabled = false;
+  yearInput.disabled = false;
+}
+
+goBtn.addEventListener("click", runSequence);
+
+// Optional: enter key triggers
+yearInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") runSequence();
+});

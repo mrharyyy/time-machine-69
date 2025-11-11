@@ -1,79 +1,61 @@
-const screen = document.getElementById("screen");
-const goBtn = document.getElementById("go");
+/* CONFIG: your message sequence before the final result */
+const sequence = [
+  "Missed Call Received from Narendra Modi…",
+  "Calling aliens… (2nd attempt)",
+  "Calling aliens… (3rd attempt)"
+];
+const finalLine = "2026 me toh duniya khatam hai 💀";
+
 const yearInput = document.getElementById("year");
+const goBtn = document.getElementById("go");
+const screen = document.getElementById("screen");
+const hint = document.getElementById("hint");
 
-// Messages sequence (kept exactly like you asked, including aliens & the final line)
-function buildSequence(y) {
-  const yr = y?.trim();
-  const target = yr ? yr : "future";
-  return [
-    `Dialing ${target}...`,
-    `Missed call received from Narendra Modi...`,
-    `Calling aliens... (2nd attempt)`,
-    `Calling aliens... (3rd attempt)`,
-    `Establishing secure link to NASA...`,
-    `Decrypting future logs...`,
-    `2026 me toh duniya khatam hai 💀`
-  ];
+/* Ensure input starts blank (no default value) */
+yearInput.value = "";
+yearInput.placeholder = "enter future years only";
+
+/* helpers */
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+function error(msg){
+  hint.textContent = msg;
+  screen.textContent = "";
 }
 
-// Typewriter with controllable speed (slower & readable)
-function typeLine(text, { charSpeed = 60 } = {}) {
-  return new Promise(resolve => {
-    screen.innerHTML = `<span class="type fade-in"></span>`;
-    const el = screen.querySelector(".type");
-    let i = 0;
-    const timer = setInterval(() => {
-      el.textContent = text.slice(0, i++);
-      if (i > text.length) {
-        clearInterval(timer);
-        resolve();
-      }
-    }, charSpeed);
-  });
+function clearError(){
+  hint.textContent = "";
 }
 
-// Blink the whole line a few times before switching to next
-function blinkLine() {
-  return new Promise(r => {
-    screen.classList.add("blink");
-    setTimeout(() => {
-      screen.classList.remove("blink");
-      r();
-    }, 260 * 5 + 60); // match CSS blink cycles
-  });
-}
-
-async function runSequence() {
-  const val = yearInput.value;
-  if (!val) {
-    yearInput.classList.add("shake");
-    setTimeout(() => yearInput.classList.remove("shake"), 400);
-    // still run for fun even if blank
+async function playSequence(){
+  screen.textContent = "";
+  for(const msg of sequence){
+    // show message with single blink (in → hold → out)
+    screen.className = "screen";     // reset
+    screen.textContent = msg;
+    screen.classList.add("blink-once","meta");
+    await sleep(1850);               // slightly more than animation length
+    screen.textContent = "";         // go to blank before next item
+    await sleep(200);                // tiny gap
   }
 
-  goBtn.disabled = true;
-  yearInput.disabled = true;
-
-  const lines = buildSequence(val);
-
-  // pacing controls (tweak if you want slower/faster)
-  const charSpeed = 60;        // ms per character (higher = slower)
-  const holdAfterType = 650;   // pause after a line finishes
-
-  for (const line of lines) {
-    await typeLine(line, { charSpeed });
-    await new Promise(r => setTimeout(r, holdAfterType));
-    await blinkLine();
-  }
-
-  goBtn.disabled = false;
-  yearInput.disabled = false;
+  // Final result: blink in once and stay, red & distinct
+  screen.className = "screen";
+  screen.textContent = finalLine;
+  screen.classList.add("blink-stick","result");
 }
 
-goBtn.addEventListener("click", runSequence);
+goBtn.addEventListener("click", async () => {
+  clearError();
 
-// Optional: enter key triggers
-yearInput.addEventListener("keydown", e => {
-  if (e.key === "Enter") runSequence();
+  const yr = Number(yearInput.value.trim());
+  if(!yr){
+    return error("Enter a year first.");
+  }
+  if(yr <= 2025){
+    return error("Future only. 2026 se aage daalo.");
+  }
+
+  // valid → play the fun sequence
+  await playSequence();
 });

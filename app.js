@@ -1,4 +1,3 @@
-/* -------------------- app.js -------------------- */
 'use strict';
 (function(){
   // 🔧 Tweak these if you want slower/faster
